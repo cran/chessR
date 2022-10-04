@@ -6,8 +6,14 @@ knitr::opts_chunk$set(
   warning=FALSE
 )
 
-## ----gh-installation----------------------------------------------------------
-# devtools::install_github("JaseZiv/chessR")
+## ----cran-installation, eval=FALSE--------------------------------------------
+#  install.packages("chessR")
+
+## ----gh-installation, eval=FALSE----------------------------------------------
+#  # install.packages("devtools")
+#  devtools::install_github("JaseZiv/chessR")
+
+## ----load_libs, warning=FALSE, message=FALSE----------------------------------
 library(chessR)
 
 ## ----packages_for_eda, include=FALSE------------------------------------------
@@ -65,11 +71,42 @@ head(chessdotcom_game_data_all_months[, c("Termination", "White", "Black", "Endi
 ## ----get_winner---------------------------------------------------------------
 # function to extract the winner of each game
 chessdotcom_game_data_all_months$Winner <- get_winner(result_column = chessdotcom_game_data_all_months$Result, 
-                                     white = chessdotcom_game_data_all_months$White, 
-                                     black = chessdotcom_game_data_all_months$Black)
+                                                      white = chessdotcom_game_data_all_months$White, 
+                                                      black = chessdotcom_game_data_all_months$Black)
 
 # inspect output
 head(chessdotcom_game_data_all_months[, c("White", "Black", "Result", "Winner")])
+
+## ----lichess_clock_move-------------------------------------------------------
+# Get Lichess game data
+lichess_game_data <- get_raw_lichess("LordyLeroy")
+
+lichess_game_data_with_time <- lichess_clock_move_time(games_list = lichess_game_data)
+
+head(lichess_game_data_with_time)
+
+
+## ----plot_lichess_clock_move--------------------------------------------------
+
+username <- "LordyLeroy"
+
+ggplot(lichess_game_data_with_time %>%
+         filter((White == username & colour == "White") |
+                  (Black == username & colour == "Black"),
+                between(move_number, 2, 9),
+                move_time <= 100),
+       aes(x = move_time,
+           fill = as.factor(move_number))) +
+  geom_density() +
+  coord_flip() +
+  labs(x = "Move time (seconds)",
+       y = "Density",
+       fill = "Move number",
+       title = "Density of move time by colour (white or black)",
+       subtitle = paste0("User: ", username)) +
+  theme_minimal() +
+  facet_wrap(~ colour)
+
 
 ## ----popular_times------------------------------------------------------------
 chessdotcom_game_data_all_months %>% 
